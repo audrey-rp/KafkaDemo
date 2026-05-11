@@ -1,8 +1,9 @@
 using System.Text.Json;
 using Confluent.Kafka;
 
-var topic = args.FirstOrDefault(a => a.StartsWith("--topic="))?.Split('=', 2)[1] ?? "content-events";
+var topic = args.FirstOrDefault(a => a.StartsWith("--topic="))?.Split('=', 2)[1] ?? "rpu-topic";
 var countArg = args.FirstOrDefault(a => a.StartsWith("--count="))?.Split('=', 2)[1];
+var keyArg = args.FirstOrDefault(a => a.StartsWith("--key="))?.Split('=', 2)[1];
 
 const string bootstrapServers = "localhost:9092";
 
@@ -15,7 +16,7 @@ using var producer = new ProducerBuilder<string, string>(config).Build();
 
 if (int.TryParse(countArg, out var count))
 {
-    Console.WriteLine($"Producing {count} messages to topic '{topic}'...\n");
+    Console.WriteLine($"Producing {count} messages to topic '{topic}'{(string.IsNullOrWhiteSpace(keyArg) ? "" : $" with key '{keyArg}'")}...\n");
 
     for (var i = 1; i <= count; i++)
     {
@@ -30,7 +31,7 @@ if (int.TryParse(countArg, out var count))
 
         var result = await producer.ProduceAsync(topic, new Message<string, string>
         {
-            Key = message.contentId,
+            Key = string.IsNullOrWhiteSpace(keyArg) ? message.contentId : keyArg,
             Value = json
         });
 
@@ -41,7 +42,8 @@ if (int.TryParse(countArg, out var count))
 }
 else
 {
-    Console.WriteLine($"Kafka Producer started. Topic: '{topic}'. Press Enter to send a message, or 'q' to quit.");
+    Console.WriteLine(
+        $"Kafka Producer started. Topic: '{topic}'{(string.IsNullOrWhiteSpace(keyArg) ? "" : $", Key override: '{keyArg}'")}. Press Enter to send a message, or 'q' to quit.");
 
     var messageCount = 0;
 
@@ -66,7 +68,7 @@ else
 
         var result = await producer.ProduceAsync(topic, new Message<string, string>
         {
-            Key = message.contentId,
+            Key = string.IsNullOrWhiteSpace(keyArg) ? message.contentId : keyArg,
             Value = json
         });
 

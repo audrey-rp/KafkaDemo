@@ -206,11 +206,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\repos\\KafkaDemo\\src\\Common\\KafkaDemo.Consumer\\KafkaDemo.Consumer.csproj",
+      "projectUniqueName": "D:\\repos\\KafkaDemo\\src\\KafkaDemo.Consumer\\KafkaDemo.Consumer.csproj",
       "projectName": "KafkaDemo.Consumer",
-      "projectPath": "D:\\repos\\KafkaDemo\\src\\Common\\KafkaDemo.Consumer\\KafkaDemo.Consumer.csproj",
+      "projectPath": "D:\\repos\\KafkaDemo\\src\\KafkaDemo.Consumer\\KafkaDemo.Consumer.csproj",
       "packagesPath": "C:\\Users\\AudreyLewis\\.nuget\\packages\\",
-      "outputPath": "D:\\repos\\KafkaDemo\\src\\Common\\KafkaDemo.Consumer\\obj\\",
+      "outputPath": "D:\\repos\\KafkaDemo\\src\\KafkaDemo.Consumer\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
