@@ -45,6 +45,8 @@ To clear all messages between demos, reset the topic (delete + recreate):
 .\setup-topics.ps1 -Reset
 ```
 
+> **Important:** Stop all running consumers and producers (`Ctrl+C`) before resetting. If consumers are still running when the topic is deleted, they will log session timeout and offset commit errors as Kafka evicts them from the group — these are harmless but noisy.
+
 ---
 
 ## Demo 1: Producer to Consumer
