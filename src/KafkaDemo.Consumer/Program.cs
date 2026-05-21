@@ -4,6 +4,8 @@ var topic = args.FirstOrDefault(a => a.StartsWith("--topic="))?.Split('=', 2)[1]
 var groupId = args.FirstOrDefault(a => a.StartsWith("--group="))?.Split('=', 2)[1] ?? "demo-consumer-group";
 var delayArg = args.FirstOrDefault(a => a.StartsWith("--delay-ms="))?.Split('=', 2)[1];
 var processingDelayMs = int.TryParse(delayArg, out var parsedDelay) && parsedDelay > 0 ? parsedDelay : 0;
+var crashAfterArg = args.FirstOrDefault(a => a.StartsWith("--crash-after="))?.Split('=', 2)[1];
+var crashAfterMessages = int.TryParse(crashAfterArg, out var parsedCrashAfter) && parsedCrashAfter > 0 ? parsedCrashAfter : 0;
 
 const string bootstrapServers = "localhost:9092";
 
@@ -19,7 +21,7 @@ using var consumer = new ConsumerBuilder<string, string>(config).Build();
 consumer.Subscribe(topic);
 
 Console.WriteLine(
-    $"Kafka Consumer started. Topic: '{topic}', Group: '{groupId}'{(processingDelayMs > 0 ? $", Processing delay: {processingDelayMs}ms" : "")}. Listening for messages... (Ctrl+C to stop)\n");
+    $"Kafka Consumer started. Topic: '{topic}', Group: '{groupId}'{(processingDelayMs > 0 ? $", Processing delay: {processingDelayMs}ms" : "")}{(crashAfterMessages > 0 ? $", Crash after: {crashAfterMessages} message(s)" : "")}. Listening for messages... (Ctrl+C to stop)\n");
 
 var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) =>
@@ -46,6 +48,11 @@ try
         {
             // Simulate slow downstream processing for lag/backpressure demos.
             Thread.Sleep(processingDelayMs);
+        }
+
+        if (crashAfterMessages > 0 && count >= crashAfterMessages)
+        {
+            Environment.FailFast($"Intentional crash for demo after {count} message(s).");
         }
     }
 }

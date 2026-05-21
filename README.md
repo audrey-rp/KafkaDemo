@@ -23,6 +23,7 @@ Both accept command-line arguments:
 | `--topic=<name>` | `rpu-topic` | The Kafka topic to produce to or consume from |
 | `--group=<name>` | `demo-consumer-group` | (Consumer only) The consumer group ID |
 | `--delay-ms=<n>` | `0` | (Consumer only) Simulated processing delay per message |
+| `--crash-after=<n>` | `0` | (Consumer only) Intentionally crash after consuming N messages |
 | `--count=<n>` | _(interactive)_ | (Producer only) Send N messages in batch mode |
 | `--key=<value>` | _(none)_ | (Producer only) Optional fixed key for all produced messages |
 
@@ -46,6 +47,15 @@ To clear all messages between demos, reset the topic (delete + recreate):
 ```
 
 > **Important:** Stop all running consumers and producers (`Ctrl+C`) before resetting. If consumers are still running when the topic is deleted, they will log session timeout and offset commit errors as Kafka evicts them from the group - these are harmless but noisy.
+
+---
+
+## Useful Kafka links
+
+- [Shared Services repo](https://dev.azure.com/recordpoint/Shared%20Resources/_git/shared-services): Kafka topic configuration deployed onto the Azure HDInsight cluster
+- [HDInsight Kafka topic management pipeline](https://dev.azure.com/recordpoint/Shared%20Resources/_build?definitionId=923): run this to create or alter a Kafka topic in HDInsight
+- [Local Kafka](https://dev.azure.com/recordpoint/Engineering%20Tools/_git/Kafka): manage local topic deployment
+- [Kafka Dashboard](https://dev.azure.com/recordpoint/Eiger/_git/KafkaDashboard): view local Kafka topic status
 
 ---
 
@@ -346,6 +356,167 @@ Look at the `LAG` column per partition. What is happening inside the consumer gr
 Once the producer finishes, keep the slow consumer running and continue checking lag.
 
 What happens to lag over time? Why might we desire this behaviour?
+
+---
+
+## Demo 6: Consumer Crash and Recovery
+
+#### 1. Start Kafka
+
+If not already running:
+
+```powershell
+docker compose up -d
+```
+
+#### 2. Reset the topic for a clean run
+
+```powershell
+.\setup-topics.ps1 -Reset
+```
+
+#### 3. Start a consumer that will crash
+
+In Terminal 1:
+
+```powershell
+cd src/KafkaDemo.Consumer
+dotnet run -- --group=crash-demo-group --crash-after=5
+```
+
+This consumer will read 5 messages and then intentionally crash (without graceful shutdown).
+
+#### 4. Produce 20 messages
+
+In Terminal 2:
+
+```powershell
+cd src/KafkaDemo.Producer
+dotnet run -- --count=10
+```
+
+Watch Terminal 1 - it will shut down after 5 of the messages
+
+#### 5. Restart the same consumer group
+
+In Terminal 1 again:
+
+```powershell
+cd src/KafkaDemo.Consumer
+dotnet run -- --group=crash-demo-group
+```
+
+Where does the consumer resume processing messages from? Why might that be? Which of the delivery semantics does this correspond to? How might we change where the offsets are committed to change the guarantee?
+
+#### 6. Check committed offsets and lag (optional)
+
+```powershell
+docker exec kafka kafka-consumer-groups `
+  --bootstrap-server localhost:9092 `
+  --describe `
+  --group crash-demo-group
+```
+
+Compare CURRENT-OFFSET, LOG-END-OFFSET, and LAG to confirm the group recovered and caught up.
+
+---
+
+## Demo 7: Crash in a Multi-Consumer Group
+
+#### 1. Start Kafka
+
+If not already running:
+
+```powershell
+docker compose up -d
+```
+
+#### 2. Reset the topic for a clean run
+
+```powershell
+.\setup-topics.ps1 -Reset
+```
+
+#### 3. Start Consumer A (will crash)
+
+In Terminal 1:
+
+```powershell
+cd src/KafkaDemo.Consumer
+dotnet run -- --group=crash-group-multi --crash-after=5
+```
+
+#### 4. Start Consumer B (stays alive)
+
+In Terminal 2:
+
+```powershell
+cd src/KafkaDemo.Consumer
+dotnet run -- --group=crash-group-multi
+```
+
+With two consumers in the same group, partitions are shared between members.
+
+#### 5. Produce 40 messages
+
+In Terminal 3:
+
+```powershell
+cd src/KafkaDemo.Producer
+dotnet run -- --count=20
+```
+
+Observe the outputs:
+
+- Before the crash, both consumers should receive messages from different partitions.
+- After Consumer A crashes, Consumer B should take over all assigned partitions after a rebalance.
+- You may see brief pause/rejoin logs during reassignment.
+
+#### 6. Inspect group state
+
+```powershell
+docker exec kafka kafka-consumer-groups `
+  --bootstrap-server localhost:9092 `
+  --describe `
+  --group crash-group-multi
+```
+
+You should see only one active member (Consumer B) and offsets continuing to advance.
+
+#### 7. Recovery and rebalancing test (optional)
+
+Run the consumers with a sleep delay to ensure a backlog while processing.
+In Terminal 1:
+
+```powershell
+cd src/KafkaDemo.Consumer
+dotnet run -- --group=crash-group-multi --delay-ms=300 --crash-after=5
+```
+
+In Terminal 2:
+
+```powershell
+cd src/KafkaDemo.Consumer
+dotnet run -- --group=crash-group-multi --delay-ms=300
+```
+
+Run the producer with enough messages to create a backlog:
+
+```powershell
+cd src/KafkaDemo.Producer
+dotnet run -- --count=500
+```
+
+Once Consumer A crashes, wait for Consumer B to rebalance. It should continue consuming messages even after Consumer A fails.
+
+Restart Consumer A without crash mode to watch partitions rebalance again:
+
+```powershell
+cd src/KafkaDemo.Consumer
+dotnet run -- --group=crash-group-multi
+```
+
+Exit both of the consumers. How many messages did each consume? What does that tell you about consumer resiliency across the group?
 
 ---
 
