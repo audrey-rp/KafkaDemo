@@ -208,7 +208,7 @@ cd src/KafkaDemo.Consumer
 dotnet run -- --group=scaling-demo-group-a
 ```
 
-What happens? What can you see in the Partition field in the output?
+What happens?
 
 #### 4. Start Consumer 3 in the Same Group
 
@@ -219,7 +219,7 @@ cd src/KafkaDemo.Consumer
 dotnet run -- --group=scaling-demo-group-a
 ```
 
-What happens now? Why would you possibly want this?
+What happens now? 
 
 #### 5. Produce 30 messages to the topic
 
@@ -228,7 +228,7 @@ cd src/KafkaDemo.Producer
 dotnet run -- --count=30
 ```
 
-This sends 30 messages to the `rpu-topic` topic with 3 partitions.
+This sends 30 messages to the `rpu-topic` topic with 3 partitions. How do these three consumers behave now?
 
 #### 6. Add a Consumer from a Different Group
 
@@ -516,7 +516,7 @@ cd src/KafkaDemo.Consumer
 dotnet run -- --group=crash-group-multi
 ```
 
-Exit both of the consumers. How many messages did each consume? What does that tell you about consumer resiliency across the group?
+Exit both of the consumers. What does that tell you about consumer resiliency across the group?
 
 ---
 
