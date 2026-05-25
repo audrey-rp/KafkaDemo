@@ -101,7 +101,7 @@ Press Enter to send a message. The producer sends events like:
 
 The consumer prints the message immediately.
 
-Press `q` to quit the producer. Shut down the consumer with the command `Ctrl+C`
+Shut down the consumer with the command `Ctrl+C`
 
 ---
 
