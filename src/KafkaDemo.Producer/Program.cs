@@ -1,7 +1,7 @@
 using System.Text.Json;
 using Confluent.Kafka;
 
-var topic = args.FirstOrDefault(a => a.StartsWith("--topic="))?.Split('=', 2)[1] ?? "rpu-topic";
+var topic = args.FirstOrDefault(a => a.StartsWith("--topic="))?.Split('=', 2)[1] ?? "demo-topic";
 var countArg = args.FirstOrDefault(a => a.StartsWith("--count="))?.Split('=', 2)[1];
 var keyArg = args.FirstOrDefault(a => a.StartsWith("--key="))?.Split('=', 2)[1];
 

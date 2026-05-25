@@ -20,7 +20,7 @@ Both accept command-line arguments:
 
 | Argument | Default | Description |
 |----------|---------|-------------|
-| `--topic=<name>` | `rpu-topic` | The Kafka topic to produce to or consume from |
+| `--topic=<name>` | `demo-topic` | The Kafka topic to produce to or consume from |
 | `--group=<name>` | `demo-consumer-group` | (Consumer only) The consumer group ID |
 | `--delay-ms=<n>` | `0` | (Consumer only) Simulated processing delay per message |
 | `--crash-after=<n>` | `0` | (Consumer only) Intentionally crash after consuming N messages |
@@ -30,7 +30,7 @@ Both accept command-line arguments:
 
 ## Setup: Create Topics
 
-All demos use the same Kafka topic: `rpu-topic` (with 3 partitions to support scaling and parallelism demos).
+All demos use the same Kafka topic: `demo-topic` (with 3 partitions to support scaling and parallelism demos).
 
 Create it using the provided setup script:
 
@@ -38,7 +38,7 @@ Create it using the provided setup script:
 .\setup-topics.ps1
 ```
 
-This will create the `rpu-topic` with 3 partitions and 1 replication factor.
+This will create the `demo-topic` with 3 partitions and 1 replication factor.
 
 To clear all messages between demos, reset the topic (delete + recreate):
 
@@ -46,16 +46,9 @@ To clear all messages between demos, reset the topic (delete + recreate):
 .\setup-topics.ps1 -Reset
 ```
 
+The demos all use different consumer groups to avoid repurposing old messages, but if you want to use the same topic/consumer group for each demo just run with the -Reset flag
+
 > **Important:** Stop all running consumers and producers (`Ctrl+C`) before resetting. If consumers are still running when the topic is deleted, they will log session timeout and offset commit errors as Kafka evicts them from the group - these are harmless but noisy.
-
----
-
-## Useful Kafka links
-
-- [Shared Services repo](https://dev.azure.com/recordpoint/Shared%20Resources/_git/shared-services): Kafka topic configuration deployed onto the Azure HDInsight cluster
-- [HDInsight Kafka topic management pipeline](https://dev.azure.com/recordpoint/Shared%20Resources/_build?definitionId=923): run this to create or alter a Kafka topic in HDInsight
-- [Local Kafka](https://dev.azure.com/recordpoint/Engineering%20Tools/_git/Kafka): manage local topic deployment
-- [Kafka Dashboard](https://dev.azure.com/recordpoint/Eiger/_git/KafkaDashboard): view local Kafka topic status
 
 ---
 
@@ -83,7 +76,7 @@ dotnet run
 You should see:
 
 ```
-Kafka Consumer started. Topic: 'rpu-topic', Group: 'demo-consumer-group'. Listening for messages... (Ctrl+C to stop)
+Kafka Consumer started. Topic: 'demo-topic', Group: 'demo-consumer-group'. Listening for messages... (Ctrl+C to stop)
 ```
 (or whatever your chosen topic name and consumer group name are, these are just the defaults)
 
@@ -131,7 +124,7 @@ cd src/KafkaDemo.Producer
 dotnet run -- --count=10
 ```
 
-You should see 10 messages delivered to the `rpu-topic` topic.
+You should see 10 messages delivered to the `demo-topic` topic.
 
 #### 3. Start the Consumer
 
@@ -159,7 +152,7 @@ Stop the consumer, then reset the consumer group offsets to the beginning for th
 docker exec kafka kafka-consumer-groups `
   --bootstrap-server localhost:9092 `
   --group persistence-demo-group `
-  --topic rpu-topic `
+  --topic demo-topic `
   --reset-offsets `
   --to-earliest `
   --execute
@@ -228,7 +221,7 @@ cd src/KafkaDemo.Producer
 dotnet run -- --count=30
 ```
 
-This sends 30 messages to the `rpu-topic` topic with 3 partitions. How do these three consumers behave now?
+This sends 30 messages to the `demo-topic` topic with 3 partitions. How do these three consumers behave now?
 
 #### 6. Add a Consumer from a Different Group
 

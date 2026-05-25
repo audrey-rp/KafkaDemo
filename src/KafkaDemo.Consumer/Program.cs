@@ -1,6 +1,6 @@
 using Confluent.Kafka;
 
-var topic = args.FirstOrDefault(a => a.StartsWith("--topic="))?.Split('=', 2)[1] ?? "rpu-topic";
+var topic = args.FirstOrDefault(a => a.StartsWith("--topic="))?.Split('=', 2)[1] ?? "demo-topic";
 var groupId = args.FirstOrDefault(a => a.StartsWith("--group="))?.Split('=', 2)[1] ?? "demo-consumer-group";
 var delayArg = args.FirstOrDefault(a => a.StartsWith("--delay-ms="))?.Split('=', 2)[1];
 var processingDelayMs = int.TryParse(delayArg, out var parsedDelay) && parsedDelay > 0 ? parsedDelay : 0;

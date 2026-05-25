@@ -53,7 +53,7 @@ function Wait-ForTopicDeletion {
 }
 
 $topics = @(
-    @{ name = "rpu-topic"; partitions = 3; replicationFactor = 1 }
+    @{ name = "demo-topic"; partitions = 3; replicationFactor = 1 }
 )
 
 Wait-ForKafka
